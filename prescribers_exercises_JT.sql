@@ -58,19 +58,47 @@ ORDER BY total_drug_cost DESC
 LIMIT 1;
 
     /*b. Which drug (generic_name) has the hightest total cost per day? **Bonus: Round your cost per day column to 2 decimal places. Google ROUND to see how this works.**/
+SELECT generic_name, sum(total_day_supply), sum(total_drug_cost), sum(total_drug_cost )/sum(total_day_supply ) AS cost_per_day
+FROM prescription 
+INNER JOIN drug 
+USING (drug_name)
+GROUP BY generic_name
+ORDER BY cost_per_day DESC
+LIMIT 1;
 
 
+/*4. a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs. **Hint:** You may want to use a CASE expression for this. See https://www.postgresqltutorial.com/postgresql-tutorial/postgresql-case/ */  
 
-/*4. a. For each drug in the drug table, return the drug name and then a column named 'drug_type' which says 'opioid' for drugs which have opioid_drug_flag = 'Y', says 'antibiotic' for those drugs which have antibiotic_drug_flag = 'Y', and says 'neither' for all other drugs. **Hint:** You may want to use a CASE expression for this. See https://www.postgresqltutorial.com/postgresql-tutorial/postgresql-case/ 
+SELECT drug_name,
+CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid'
+WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic' 
+ELSE 'neither'
+END 
+FROM drug;
 
-    b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.*/
+    /*b. Building off of the query you wrote for part a, determine whether more was spent (total_drug_cost) on opioids or on antibiotics. Hint: Format the total costs as MONEY for easier comparision.*/
+
+SELECT CAST(sum(total_drug_cost) AS money),
+CASE WHEN opioid_drug_flag = 'Y' THEN 'opioid'
+WHEN antibiotic_drug_flag = 'Y' THEN 'antibiotic' 
+ELSE 'neither'
+END AS drug_type
+FROM drug
+INNER JOIN prescription 
+USING (drug_name)
+GROUP BY drug_type 
+ORDER BY sum(total_drug_cost) DESC ;
 
 
+/*5. a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.*/
 
+SELECT count(DISTINCT cbsa) 
+FROM cbsa
+INNER JOIN fips_county
+USING (fipscounty)
+WHERE state = 'TN'
 
-/*5. a. How many CBSAs are in Tennessee? **Warning:** The cbsa table contains information for all states, not just Tennessee.
-
-    b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
+    /*b. Which cbsa has the largest combined population? Which has the smallest? Report the CBSA name and total population.
 
     c. What is the largest (in terms of population) county which is not included in a CBSA? Report the county name and population.*/
 
