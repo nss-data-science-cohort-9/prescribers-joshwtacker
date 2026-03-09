@@ -52,7 +52,19 @@ ORDER BY total_claim_count DESC;
 
     /*d. **Difficult Bonus:** *Do not attempt until you have solved all other problems!* For each specialty, report the percentage of total claims by that specialty which are for opioids. Which specialties have a high percentage of opioids?*/
 
-
+SELECT specialty_description, 
+  SUM(CASE 
+   WHEN opioid_drug_flag = 'Y' THEN total_claim_count 
+   ELSE 0 
+   END) 
+      / SUM(total_claim_count) AS pct_claims_opioid
+from prescriber 
+left join prescription 
+using(npi)
+inner join drug
+using(drug_name)
+group by specialty_description
+order by pct_claims_opioid desc;
 
 
 /*3.  a. Which drug (generic_name) had the highest total drug cost?*/
@@ -172,6 +184,15 @@ WHERE total_claim_count >= 3000;
 /*7. The goal of this exercise is to generate a full list of all pain management specialists in Nashville and the number of claims they had for each opioid. **Hint:** The results from all 3 parts will have 637 rows.
 
     a. First, create a list of all npi/drug_name combinations for pain management specialists (specialty_description = 'Pain Management') in the city of Nashville (nppes_provider_city = 'NASHVILLE'), where the drug is an opioid (opiod_drug_flag = 'Y'). **Warning:** Double-check your query before running it. You will only need to use the prescriber and drug tables since you don't need the claims numbers yet.*/
+SELECT npi, drug_name
+FROM prescriber
+CROSS JOIN drug
+WHERE specialty_description = 'Pain Management' AND nppes_provider_city = 'NASHVILLE' AND opioid_drug_flag = 'Y';
+
+
+
+    /*b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count). */
+    
 SELECT prescriber.npi, drug.drug_name, SUM(total_claim_count) as totalclaims
 FROM prescriber
 CROSS JOIN drug
@@ -181,9 +202,8 @@ WHERE specialty_description = 'Pain Management' AND nppes_provider_city = 'NASHV
 group by npi, drug.drug_name;
 
 
+    /*c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.*/
 
-    /*b. Next, report the number of claims per drug per prescriber. Be sure to include all combinations, whether or not the prescriber had any claims. You should report the npi, the drug name, and the number of claims (total_claim_count). */
-    
 SELECT prescriber.npi, drug.drug_name, coalesce(SUM(total_claim_count),0) as totalclaims
 FROM prescriber
 CROSS JOIN drug
@@ -191,21 +211,4 @@ LEFT JOIN prescription
 USING(npi, drug_name)
 WHERE specialty_description = 'Pain Management' AND nppes_provider_city = 'NASHVILLE' AND opioid_drug_flag = 'Y'
 GROUP BY npi, drug.drug_name;
-
-
-    /*c. Finally, if you have not done so already, fill in any missing values for total_claim_count with 0. Hint - Google the COALESCE function.*/
-
-SELECT specialty_description, 
-  SUM(CASE 
-   WHEN opioid_drug_flag = 'Y' THEN total_claim_count 
-   ELSE 0 
-   END) 
-      / SUM(total_claim_count) AS pct_claims_opioid
-from prescriber 
-left join prescription 
-using(npi)
-inner join drug
-using(drug_name)
-group by specialty_description
-order by pct_claims_opioid desc;
 
